@@ -7,7 +7,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import static com.example.dardan.elearning.Ulti.getUrl;
 
@@ -34,7 +33,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
     public static final String COLUMN_TEXT = "text";
     public static final String COLUMN_NOISE = "noise";
     public static final String COLUMN_SOUND = "sound";
-    private static final String COLUMN_CATEGORY_ID = "categoryId";
+    public static final String COLUMN_CATEGORY_ID = "categoryId";
     //create table category
     private static final String CREATE_TABLE_CATEGORY =
             "create table " + TABLE_CATEGORY
@@ -204,7 +203,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
         db.close();
     }
 
-    public List<Category> getAllCategory() {
+    public ArrayList<Category> getAllCategory() {
         ArrayList<Category> categoryList = new ArrayList<>();
         // Select All Query
         String selectQuery = "SELECT * FROM " + TABLE_CATEGORY;

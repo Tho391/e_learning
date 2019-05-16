@@ -16,19 +16,43 @@ public class CategoriesActivity extends AppCompatActivity implements AdapterView
     public static ArrayList<Category> categories;
     CustomCategoryAdapter adapter;
     ListView listView;
-
+    MySQLiteHelper db;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_card_list);
+
         categories = new ArrayList<>();
-        populateCategoriesList();
+
+
+        //populateCategoriesList();
+
+        db = new MySQLiteHelper(this);
+        db.createDefaultCategory();
+        categories = db.getAllCategory();
+        createAdapter();
+    }
+    //todo sửa lại adapter
+    private void createAdapter() {
+        // Create the adapter to convert the array to views
+        adapter = new CustomCategoryAdapter(this, categories);
+        // Attach the adapter to a ListView
+        listView = findViewById(R.id.listViewCards);
+        listView.setAdapter(adapter);
+        listView.setOnItemClickListener(this);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        updateHighscores();
+        //updateHighscores();
+
+        updateCategory();
+    }
+
+    private void updateCategory() {
+        categories = db.getAllCategory();
+        adapter.notifyDataSetChanged();
     }
 
     @Override
@@ -37,7 +61,8 @@ public class CategoriesActivity extends AppCompatActivity implements AdapterView
         inflater.inflate(R.menu.menu_quiz, menu);
         return true;
     }
-
+    //todo set value thành id cho category
+    //todo sửa menu thành list
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Intent intent = new Intent(this, QuizActivity.class);
