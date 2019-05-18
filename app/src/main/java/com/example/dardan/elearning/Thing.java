@@ -1,24 +1,21 @@
 package com.example.dardan.elearning;
 
+import android.graphics.Bitmap;
+
 /**
  * Created by Dardan on 4/5/2016.
  */
 public class Thing {
     private int id;
-    private String image;
+    private Bitmap image;
     private String sound;
     private String text;
     private String noise;
-
-    public void setNoise(String noise) {
-        this.noise = noise;
-    }
-
     private int categoryId;
 
 
 
-    public Thing(String image, String sound, String text, String noise, int categoryId) {
+    public Thing(Bitmap image, String sound, String text, String noise, int categoryId) {
         this.image = image;
         this.sound = sound;
         this.text = text;
@@ -26,14 +23,14 @@ public class Thing {
         this.categoryId = categoryId;
     }
 
-    public Thing(String image, String sound, String text, String noise) {
+    public Thing(Bitmap image, String sound, String text, String noise) {
         this.image = image;
         this.sound = sound;
         this.text = text;
         this.noise = noise;
     }
 
-    public Thing(String image, String sound, String text) {
+    public Thing(Bitmap image, String sound, String text) {
         this(image, sound, text, "0");
     }
 
@@ -52,6 +49,9 @@ public class Thing {
     public String getNoise() {
         return noise;
     }
+    public void setNoise(String noise) {
+        this.noise = noise;
+    }
 
     public boolean hasNoise() {
         return false;
@@ -64,11 +64,11 @@ public class Thing {
         this.sound = sound;
     }
 
-    public String getImage() {
+    public Bitmap getImage() {
         return image;
     }
 
-    public void setImage(String image) {
+    public void setImage(Bitmap image) {
         this.image = image;
     }
     public int getId() {

@@ -5,6 +5,7 @@ import android.content.res.Resources;
 import android.graphics.drawable.GradientDrawable;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.TypedValue;
 import android.view.View;
@@ -12,6 +13,9 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.io.IOException;
 
 public class ThingsActivity extends AppCompatActivity implements View.OnClickListener {
     private ImageButton rightButton;
@@ -99,10 +103,10 @@ public class ThingsActivity extends AppCompatActivity implements View.OnClickLis
                 }
                 break;
             case R.id.buttonQuiz:
-                Intent previousIntent = getIntent();
-                int position = previousIntent.getIntExtra("position", 0);
+                //Intent previousIntent = getIntent();
+                //int position = previousIntent.getIntExtra("position", 0);
                 Intent intent = new Intent(this, QuizActivity.class);
-                intent.putExtra("position", position);
+                intent.putExtra("position", currentCategory.id);
                 startActivity(intent);
                 break;
         }
@@ -114,17 +118,20 @@ public class ThingsActivity extends AppCompatActivity implements View.OnClickLis
      * current Category and Thing
      */
     protected void updateResources() {
-        if (currentThing.hasNoise()) {
-            playSound(currentThing.getNoise());
-            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                public void onCompletion(MediaPlayer player) {
-                    player.reset();
-                    playSound(currentThing.getSound());
-                }
-            });
-        } else
-            playSound(currentThing.getSound());
-
+        try {
+            if (currentThing.hasNoise()) {
+                playSound(currentThing.getNoise());
+                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    public void onCompletion(MediaPlayer player) {
+                        player.reset();
+                        playSound(currentThing.getSound());
+                    }
+                });
+            } else
+                playSound(currentThing.getSound());
+        }catch (Exception e){
+            e.getMessage();
+        }
         TypedValue typedValue = new TypedValue();
         Resources.Theme theme = this.getTheme(); //gets the current Theme
 
@@ -147,9 +154,12 @@ public class ThingsActivity extends AppCompatActivity implements View.OnClickLis
 
         // make the picture Invisible and then Visible to add some animation
         mainPicture.setVisibility(View.INVISIBLE);
-        mainPicture.setImageResource(currentThing.getImage());
+        //mainPicture.setImageResource(currentThing.getImage());
+        mainPicture.setImageBitmap(currentThing.getImage());
+
+
         mainPicture.setVisibility(View.VISIBLE);
-        quizButton.setImageResource(currentCategory.quizImage);
+        quizButton.setImageResource(R.drawable.ic_face_blue);
         mainName.setText(currentThing.getText());
 
         rightButton.setVisibility(currentCategory.hasNextThing() ? View.VISIBLE : View.INVISIBLE);
@@ -175,6 +185,30 @@ public class ThingsActivity extends AppCompatActivity implements View.OnClickLis
         }
         mediaPlayer = MediaPlayer.create(this, sound);
         mediaPlayer.start();
+
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            public void onCompletion(MediaPlayer player) {
+                player.reset();
+            }
+        });
+    }
+
+    private void playSound(String path){
+        // if the player is in the middle of playing another sound/noise
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+            stopAndResetPlayer();
+        }
+        String filePath = Environment.getExternalStorageDirectory() + path;
+        try {
+            mediaPlayer.setDataSource(filePath);
+            mediaPlayer.prepare();
+            mediaPlayer.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this,"Can not play sound",Toast.LENGTH_LONG).show();
+        }
+
+
 
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             public void onCompletion(MediaPlayer player) {

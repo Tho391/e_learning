@@ -1,5 +1,7 @@
 package com.example.dardan.elearning;
 
+import android.graphics.Bitmap;
+
 import java.util.ArrayList;
 
 public class Category {
@@ -7,13 +9,13 @@ public class Category {
     int currentIndex=0;
     int id;
     String title;
-    String image;
+    Bitmap image;
     int highScore;
     int color;
     int theme;
 
     public Category(){}
-    public Category(String title, String image, int highScore, int color, int theme){
+    public Category(String title, Bitmap image, int highScore, int color, int theme){
         this.title=title;
         this.image=image;
         this.highScore = highScore;

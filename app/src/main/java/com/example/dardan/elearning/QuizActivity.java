@@ -3,9 +3,9 @@ package com.example.dardan.elearning;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.media.MediaPlayer;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
@@ -13,7 +13,6 @@ import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,12 +39,17 @@ public class QuizActivity extends AppCompatActivity implements View.OnClickListe
 
     // if this variable is set, the touch events are not processed (the UI is blocked)
     private boolean stopUserInteractions;
+    MySQLiteHelper mySQLiteHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        mySQLiteHelper = new MySQLiteHelper(this);
+
         Intent intent = getIntent();//return the intent that started this activity
-        int position = intent.getIntExtra("position", 0);
-        currentCategory = CategoriesActivity.categories.get(position);
+        int id = intent.getIntExtra("position", 0);
+        //currentCategory = CategoriesActivity.categories.get(position);
+        currentCategory = mySQLiteHelper.getCategory(id);
+
         setTheme(currentCategory.theme);
 
         super.onCreate(savedInstanceState);
@@ -53,13 +57,13 @@ public class QuizActivity extends AppCompatActivity implements View.OnClickListe
         getSupportActionBar().setDisplayHomeAsUpEnabled(true); // back button
 
         things = currentCategory.getListOfThings();
-        relativeLayout = (RelativeLayout) findViewById(R.id.quizLayout);
-        mainPicture = (ImageView) findViewById(R.id.quizImage);
-        answer1 = (RadioButton) findViewById(R.id.answer1);
-        answer2 = (RadioButton) findViewById(R.id.answer2);
-        answer3 = (RadioButton) findViewById(R.id.answer3);
-        scoreTextView = (TextView) findViewById(R.id.scoreCounter);
-        questionTextView = (TextView) findViewById(R.id.questionCounter);
+        relativeLayout = findViewById(R.id.quizLayout);
+        mainPicture = findViewById(R.id.quizImage);
+        answer1 = findViewById(R.id.answer1);
+        answer2 = findViewById(R.id.answer2);
+        answer3 = findViewById(R.id.answer3);
+        scoreTextView = findViewById(R.id.scoreCounter);
+        questionTextView = findViewById(R.id.questionCounter);
 
         answer1.setOnClickListener(this);
         answer2.setOnClickListener(this);
@@ -107,11 +111,15 @@ public class QuizActivity extends AppCompatActivity implements View.OnClickListe
         if (questionNumber == 1) {
             scoreTextView.setText("Score: " + 0);
         } else if (questionNumber > 10) {
+
+            //update highscore
+//            Highscores.open(this);
+//            if (Highscores.setHighscore(currentCategory.columnName, score))
+//                Toast.makeText(this, "New Highscore!", Toast.LENGTH_LONG).show();
+//            Highscores.close();
+            //mySQLiteHelper.setHighScore(currentCategory.title,score);
+            mySQLiteHelper.updateHighScore(currentCategory.title,score);
             this.finish();
-            Highscores.open(this);
-            if (Highscores.setHighscore(currentCategory.columnName, score))
-                Toast.makeText(this, "New Highscore!", Toast.LENGTH_LONG).show();
-            Highscores.close();
             return;
         }
         questionTextView.setText("Question: " + questionNumber);
@@ -142,7 +150,11 @@ public class QuizActivity extends AppCompatActivity implements View.OnClickListe
         thingAnswer = things.get(answers[index]);
 
         mainPicture.setVisibility(View.INVISIBLE);
-        mainPicture.setImageResource(thingAnswer.getImage());
+        //mainPicture.setImageResource(thingAnswer.getImage());
+        //set image
+        mainPicture.setImageBitmap(thingAnswer.getImage());
+
+
         mainPicture.setVisibility(View.VISIBLE);
 
         setRandomAnswer(answer1, indexes, answers);
@@ -187,7 +199,8 @@ public class QuizActivity extends AppCompatActivity implements View.OnClickListe
                     ((RadioButton) v).setChecked(false);
                 stopUserInteractions = false; // enable UI again after the next question is displayed
             }
-        }, 2000);
+            //todo sửa lại thành 2000ms
+        }, 500);
 //        // lambda expression as a replacement for the Runnable anonymous class
 //        handler.postDelayed(() -> updateResources(), 2000);
     }

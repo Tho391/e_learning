@@ -1,9 +1,5 @@
 package com.example.dardan.elearning;
 
-/**
- * Created by Dardan on 4/19/2016.
- */
-
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,8 +34,10 @@ public class CustomCategoryAdapter extends ArrayAdapter<Category> {
         // Populate the data into the template view using the data object
         categoryTitle.setText(category.title);
         categoryHighscore.setText("Highscore: " + category.highScore);
-        categoryImage.setImageResource(Integer.parseInt(category.image));
+        //categoryImage.setImageResource(Integer.parseInt(category.image));
         categoryLayout.setBackgroundColor(category.color);
+
+        categoryImage.setImageBitmap(category.image);
 
         // Return the completed view to render on screen
         return convertView;

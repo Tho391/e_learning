@@ -1,30 +1,62 @@
 package com.example.dardan.elearning;
 
+import android.Manifest;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
 import java.util.ArrayList;
+import java.util.List;
 
-public class CategoriesActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
+import pub.devrel.easypermissions.AppSettingsDialog;
+import pub.devrel.easypermissions.EasyPermissions;
+
+public class CategoriesActivity extends AppCompatActivity implements AdapterView.OnItemClickListener, EasyPermissions.PermissionCallbacks {
     public static ArrayList<Category> categories;
     CustomCategoryAdapter adapter;
     ListView listView;
     MySQLiteHelper db;
+    private static final String SHAREPREFERENCES_NAME="firstTime";
+    boolean firstTime = true;
+
+    private static final int REQUEST_CODE = 121;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_card_list);
 
+        if (Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.LOLLIPOP) {
+            String[] perms = {
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+            };
+            if (!EasyPermissions.hasPermissions(this, perms)) {
+                EasyPermissions.requestPermissions(this, "All permissions are required in oder to run this application", REQUEST_CODE, perms);
+            }
+        }
+
+
+        //kiểm tra có phải lần đầu mở app k
+//        SharedPreferences sharedPreferences= this.getSharedPreferences(SHAREPREFERENCES_NAME, Context.MODE_PRIVATE);
+//        if (sharedPreferences!=null){
+//            firstTime = true;
+//        }
+//        SharedPreferences.Editor editor = sharedPreferences.edit();
+//        editor.putBoolean(SHAREPREFERENCES_NAME,firstTime);
+//        editor.apply();
+
         categories = new ArrayList<>();
 
-
+        //thay populate => createAdapter
         //populateCategoriesList();
 
         db = new MySQLiteHelper(this);
@@ -44,14 +76,18 @@ public class CategoriesActivity extends AppCompatActivity implements AdapterView
 
     @Override
     protected void onResume() {
+        updateCategory();
+
         super.onResume();
+        //hàm này là update high score cho mỗi category
         //updateHighscores();
 
-        updateCategory();
+
     }
 
     private void updateCategory() {
-        categories = db.getAllCategory();
+        categories.clear();
+        categories.addAll(db.getAllCategory());
         adapter.notifyDataSetChanged();
     }
 
@@ -59,6 +95,27 @@ public class CategoriesActivity extends AppCompatActivity implements AdapterView
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_quiz, menu);
+
+        //add item to option menu
+//        try{
+//        for (Category c: categories) {
+//            menu.getItem(1).getSubMenu().add(c.title);
+//        }
+//        }catch (Exception e){
+//            e.getMessage();
+//        }
+
+        MenuItem menuItem = menu.getItem(1);
+        SubMenu quizMenu = menuItem.getSubMenu();
+        quizMenu.clear();
+        //SubMenu quizMenu = menu.addSubMenu("Quiz");
+        for (Category c:categories) {
+            quizMenu.addSubMenu(0,c.id,c.id,c.title);
+        }
+
+
+
+
         return true;
     }
     //todo set value thành id cho category
@@ -66,26 +123,34 @@ public class CategoriesActivity extends AppCompatActivity implements AdapterView
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Intent intent = new Intent(this, QuizActivity.class);
-        switch (item.getItemId()) {
-            case R.id.quiz_fruits:
-                intent.putExtra("position", 0);
-                startActivity(intent);
-                return true;
-            case R.id.quiz_animals:
-                intent.putExtra("position", 1);
-                startActivity(intent);
-                return true;
-            case R.id.quiz_food:
-                intent.putExtra("position", 2);
-                startActivity(intent);
-                return true;
-            case R.id.quiz_colors:
-                intent.putExtra("position", 3);
-                startActivity(intent);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+//        switch (item.getItemId()) {
+//            case R.id.quiz_fruits:
+//                intent.putExtra("position", 0);
+//                startActivity(intent);
+//                return true;
+//            default:
+//                return super.onOptionsItemSelected(item);
+//         }
+        if (item.getItemId() == R.id.add_category){
+            Intent intent1 = new Intent(this,AddCategoryActivity.class);
+            startActivity(intent1);
+            return true;
         }
+        for (Category c:categories) {
+            if (item.getItemId() == c.id){
+                intent.putExtra("position", c.id);
+                startActivity(intent);
+                return true;
+            }
+        }
+
+
+
+        //lấy title của menu => id của category => truyền sang activity quiz
+//        Category category = db.getCategory(item.getTitle().toString());
+//        int id = category.id;
+//        intent.putExtra("position",id);
+        return true;
     }
 
     private void populateCategoriesList() {
@@ -212,5 +277,28 @@ public class CategoriesActivity extends AppCompatActivity implements AdapterView
         Intent intent = new Intent(this, ThingsActivity.class);
         intent.putExtra("position", position);
         startActivity(intent);
+    }
+
+    @Override
+    public void onPermissionsGranted(int requestCode, @NonNull List<String> perms) {
+        // if permissions have been granted, or has been passed, take an action here,
+        // perform your action here
+        // this method will be called as soon as permissions have been granted
+        // you can add a toast message here, to see what happens
+    }
+
+    @Override
+    public void onPermissionsDenied(int requestCode, @NonNull List<String> perms) {
+        if (EasyPermissions.somePermissionPermanentlyDenied(this, perms)) {
+            // if some permissions has been denied, show a settings dialog
+            // that will take user to the application permissions setting secreen
+            new AppSettingsDialog.Builder(this).build().show();
+        }
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        EasyPermissions.requestPermissions(this, "All permissions are required to run this application", requestCode, permissions);
+
     }
 }
