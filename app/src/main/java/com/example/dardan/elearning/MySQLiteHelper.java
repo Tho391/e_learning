@@ -293,7 +293,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
         if (cursor != null)
             cursor.moveToFirst();
 
-        Category category = new Category();
+        Category category = new Category(context);
         category.id = id;
         if (cursor != null) {
 
@@ -343,7 +343,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
         if (cursor != null)
             cursor.moveToFirst();
 
-        Category category = new Category();
+        Category category = new Category(context);
         if (cursor != null) {
             category.id = Integer.parseInt(cursor.getString(0));
             category.title = cursor.getString(1);

@@ -2,17 +2,18 @@ package com.example.dardan.elearning;
 
 import android.graphics.Bitmap;
 
+import java.io.Serializable;
+
 /**
  * Created by Dardan on 4/5/2016.
  */
-public class Thing {
+public class Thing implements Serializable {
     private int id;
     private Bitmap image;
     private String sound;
     private String text;
     private String noise;
     private int categoryId;
-
 
 
     public Thing(Bitmap image, String sound, String text, String noise, int categoryId) {
@@ -38,6 +39,10 @@ public class Thing {
 
     }
 
+    public Thing(String thingName, Bitmap thingImage) {
+        new Thing(thingImage, "", thingName, "");
+    }
+
     public String getText() {
         return text;
     }
@@ -49,6 +54,7 @@ public class Thing {
     public String getNoise() {
         return noise;
     }
+
     public void setNoise(String noise) {
         this.noise = noise;
     }
@@ -58,7 +64,9 @@ public class Thing {
         //return this.noise != 0;
     }
 
-    public String getSound() { return sound; }
+    public String getSound() {
+        return sound;
+    }
 
     public void setSound(String sound) {
         this.sound = sound;
@@ -71,6 +79,7 @@ public class Thing {
     public void setImage(Bitmap image) {
         this.image = image;
     }
+
     public int getId() {
         return id;
     }
@@ -78,6 +87,7 @@ public class Thing {
     public void setId(int id) {
         this.id = id;
     }
+
     public int getCategoryId() {
         return categoryId;
     }

@@ -12,6 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".AddCategoryActivity"></activity>
+        <activity android:name=".AddThingsActivity" />
         <activity
             android:name=".CategoriesActivity"
             android:label="Categories"

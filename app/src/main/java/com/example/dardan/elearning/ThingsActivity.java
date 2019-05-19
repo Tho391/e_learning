@@ -87,12 +87,16 @@ public class ThingsActivity extends AppCompatActivity implements View.OnClickLis
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.buttonLeftThing:
-                currentThing = currentCategory.prevThing();
-                updateResources();
+                if (currentCategory.prevThing() != null) {
+                    currentThing = currentCategory.prevThing();
+                    updateResources();
+                }
                 break;
             case R.id.buttonRightThing:
-                currentThing = currentCategory.nextThing();
-                updateResources();
+                if (currentCategory.nextThing() != null) {
+                    currentThing = currentCategory.nextThing();
+                    updateResources();
+                }
                 break;
             case R.id.buttonAudioThing:
                 playSound(currentThing.getSound());
@@ -129,7 +133,7 @@ public class ThingsActivity extends AppCompatActivity implements View.OnClickLis
                 });
             } else
                 playSound(currentThing.getSound());
-        }catch (Exception e){
+        } catch (Exception e) {
             e.getMessage();
         }
         TypedValue typedValue = new TypedValue();
@@ -193,7 +197,7 @@ public class ThingsActivity extends AppCompatActivity implements View.OnClickLis
         });
     }
 
-    private void playSound(String path){
+    private void playSound(String path) {
         // if the player is in the middle of playing another sound/noise
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             stopAndResetPlayer();
@@ -205,9 +209,8 @@ public class ThingsActivity extends AppCompatActivity implements View.OnClickLis
             mediaPlayer.start();
         } catch (IOException e) {
             e.printStackTrace();
-            Toast.makeText(this,"Can not play sound",Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Can not play sound", Toast.LENGTH_LONG).show();
         }
-
 
 
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {

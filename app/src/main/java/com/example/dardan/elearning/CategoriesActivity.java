@@ -132,7 +132,7 @@ public class CategoriesActivity extends AppCompatActivity implements AdapterView
 //                return super.onOptionsItemSelected(item);
 //         }
         if (item.getItemId() == R.id.add_category){
-            Intent intent1 = new Intent(this,AddCategoryActivity.class);
+            Intent intent1 = new Intent(this, AddCategoryActivity.class);
             startActivity(intent1);
             return true;
         }
