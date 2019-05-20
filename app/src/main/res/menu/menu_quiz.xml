@@ -2,6 +2,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/add_default"
+        android:icon="@drawable/default_cate"
+        android:title="create"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/add_category"
         android:icon="@drawable/round_add_24"
         android:title="add"

@@ -86,7 +86,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    //add default category
+    //add default_cate category
     public void createDefaultCategory() {
 
 
@@ -174,6 +174,8 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
         int count = cursor.getCount();
         cursor.close();
         // return count
+
+        db.close();
         return count;
     }
 
@@ -191,11 +193,14 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
         values.put(COLUMN_THEME, category.theme);
         // insert 1 row to table
         db.insert(TABLE_CATEGORY, null, values);
-        //db.close();
 
+//        db.close();
+//        if (!db.isOpen())
+//            db = getWritableDatabase();
         //db = getWritableDatabase();
         int lastCategoryId = getLastId(TABLE_CATEGORY);
-
+        if (!db.isOpen())
+            db = getWritableDatabase();
         for (Thing i : category.things) {
             ContentValues values1 = new ContentValues();
             values1.put(COLUMN_TEXT, i.getText());
@@ -218,7 +223,8 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
             cursor.moveToFirst();
         int id = Integer.parseInt(cursor.getString(0));
 
-        //db.close();
+        cursor.close();
+        db.close();
         return id;
     }
 
@@ -234,6 +240,12 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
         // updating row
         int update1 = db.update(TABLE_CATEGORY, values, COLUMN_ID + " = ?",
                 new String[]{String.valueOf(category.id)});
+
+//        db.close();
+//        if (!db.isOpen()) {
+//            db = getWritableDatabase();
+//        }
+
         for (Thing i : category.things) {
             ContentValues values1 = new ContentValues();
             values.put(COLUMN_TEXT, i.getText());
@@ -246,7 +258,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
                     new String[]{String.valueOf(category.id)});
         }
 
-
+        db.close();
         return update1;
     }
 
@@ -268,18 +280,25 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
         ArrayList<Integer> idList = new ArrayList<>();
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
-
-        // Browse on the cursor, and add to the list.
-        if (cursor.moveToFirst()) {
+        if (cursor != null && cursor.moveToFirst()) {
+            // Browse on the cursor, and add to the list.
             do {
-                int id = Integer.parseInt(cursor.getString(0));
-                idList.add(id);
+                int id = -1;
+                if (cursor.getString(0) != null) {
+                    id = Integer.parseInt(cursor.getString(0));
+                    idList.add(id);
+                }
             } while (cursor.moveToNext());
+
+            for (int i : idList) {
+                categoryList.add(getCategory(i));
+            }
+        } else {
+            db.close();
+            return null;
         }
-        for (int i : idList) {
-            categoryList.add(getCategory(i));
-        }
-        // return note list
+        cursor.close();
+        db.close();
         return categoryList;
     }
 
@@ -290,13 +309,12 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
                         COLUMN_TITLE, COLUMN_IMAGE, COLUMN_HIGHSCORE, COLUMN_COLOR, COLUMN_THEME},
                 COLUMN_ID + "=?",
                 new String[]{String.valueOf(id)}, null, null, null, null);
-        if (cursor != null)
-            cursor.moveToFirst();
+
 
         Category category = new Category(context);
         category.id = id;
         if (cursor != null) {
-
+            cursor.moveToFirst();
             category.title = cursor.getString(1);
             //category.image = cursor.getString(2);
             category.image = ByteToBitmap(cursor.getBlob(2));
@@ -305,30 +323,38 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
             category.color = Integer.parseInt(cursor.getString(4));
             category.theme = Integer.parseInt(cursor.getString(5));
 
+            cursor.close();
+//            if (!db.isOpen()) {
+//                db = getWritableDatabase();
+//            }
+
             Cursor cursor1 = db.query(TABLE_THING,
                     new String[]{COLUMN_ID, COLUMN_TEXT, COLUMN_IMAGE, COLUMN_SOUND, COLUMN_NOISE, COLUMN_CATEGORY_ID},
                     COLUMN_CATEGORY_ID + " = ?",
                     new String[]{String.valueOf(id)}, null, null, null, null);
-            if (cursor1 != null)
-                cursor1.moveToFirst();
-            ArrayList<Thing> things = new ArrayList<>();
-            do {
-                Thing thing = new Thing();
+            if (cursor1 != null && cursor1.moveToFirst()) {
 
-                thing.setId(Integer.parseInt(cursor1.getString(0)));
-                thing.setText(cursor1.getString(1));
-                //thing.setImage(cursor.getString(2));
-                thing.setImage(ByteToBitmap(cursor1.getBlob(2)));
+                ArrayList<Thing> things = new ArrayList<>();
+                do {
+                    Thing thing = new Thing();
 
-                thing.setSound(cursor1.getString(3));
-                thing.setNoise(cursor1.getString(4));
-                thing.setCategoryId(Integer.parseInt(cursor1.getString(5)));
-                // add to list
-                things.add(thing);
-            } while (cursor1.moveToNext());
-            category.things = things;
+                    thing.setId(Integer.parseInt(cursor1.getString(0)));
+                    thing.setText(cursor1.getString(1));
+                    //thing.setImage(cursor.getString(2));
+                    thing.setImage(ByteToBitmap(cursor1.getBlob(2)));
+
+                    thing.setSound(cursor1.getString(3));
+                    thing.setNoise(cursor1.getString(4));
+                    thing.setCategoryId(Integer.parseInt(cursor1.getString(5)));
+                    // add to list
+                    things.add(thing);
+                } while (cursor1.moveToNext());
+                cursor1.close();
+
+                category.things = things;
+            }
         }
-
+        db.close();
         // return note
         return category;
     }
@@ -354,6 +380,12 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
             category.color = Integer.parseInt(cursor.getString(4));
             category.theme = Integer.parseInt(cursor.getString(5));
 
+            cursor.close();
+//            db.close();
+//            if (!db.isOpen()) {
+//                db = getWritableDatabase();
+//            }
+
             Cursor cursor1 = db.query(TABLE_THING,
                     new String[]{COLUMN_ID, COLUMN_TEXT, COLUMN_IMAGE, COLUMN_SOUND, COLUMN_NOISE, COLUMN_CATEGORY_ID},
                     COLUMN_CATEGORY_ID + " = ?",
@@ -375,9 +407,11 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
                 // add to list
                 things.add(thing);
             } while (cursor1.moveToNext());
+            cursor1.close();
+
             category.things = things;
         }
-
+        db.close();
         // return note
         return category;
     }
@@ -397,6 +431,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper {
         // updating row
         db.update(TABLE_CATEGORY, values, COLUMN_ID + " = ?",
                 new String[]{String.valueOf(category.id)});
+        db.close();
     }
 
     public void setHighScore(String categoryTitle, int highScore) {

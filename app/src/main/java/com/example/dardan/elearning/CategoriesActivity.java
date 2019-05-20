@@ -1,11 +1,15 @@
 package com.example.dardan.elearning;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -13,6 +17,7 @@ import android.view.SubMenu;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,15 +25,16 @@ import java.util.List;
 import pub.devrel.easypermissions.AppSettingsDialog;
 import pub.devrel.easypermissions.EasyPermissions;
 
-public class CategoriesActivity extends AppCompatActivity implements AdapterView.OnItemClickListener, EasyPermissions.PermissionCallbacks {
+public class CategoriesActivity extends AppCompatActivity implements AdapterView.OnItemClickListener, EasyPermissions.PermissionCallbacks, AdapterView.OnItemLongClickListener {
     public static ArrayList<Category> categories;
     CustomCategoryAdapter adapter;
     ListView listView;
     MySQLiteHelper db;
-    private static final String SHAREPREFERENCES_NAME="firstTime";
+    private static final String SHAREPREFERENCES_NAME = "firstTime";
     boolean firstTime = true;
 
     private static final int REQUEST_CODE = 121;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,35 +66,53 @@ public class CategoriesActivity extends AppCompatActivity implements AdapterView
         //populateCategoriesList();
 
         db = new MySQLiteHelper(this);
-        db.createDefaultCategory();
+        //db.createDefaultCategory();
         categories = db.getAllCategory();
         createAdapter();
     }
+
     //todo sửa lại adapter
     private void createAdapter() {
-        // Create the adapter to convert the array to views
-        adapter = new CustomCategoryAdapter(this, categories);
-        // Attach the adapter to a ListView
         listView = findViewById(R.id.listViewCards);
-        listView.setAdapter(adapter);
         listView.setOnItemClickListener(this);
+        listView.setLongClickable(true);
+        listView.setOnItemLongClickListener(this);
+        if (categories != null) {
+            // Create the adapter to convert the array to views
+            adapter = new CustomCategoryAdapter(this, categories);
+            // Attach the adapter to a ListView
+
+            listView.setAdapter(adapter);
+
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        updateCategory();
     }
 
     @Override
     protected void onResume() {
-        updateCategory();
+
 
         super.onResume();
         //hàm này là update high score cho mỗi category
         //updateHighscores();
-
+        updateCategory();
 
     }
 
     private void updateCategory() {
-        categories.clear();
-        categories.addAll(db.getAllCategory());
-        adapter.notifyDataSetChanged();
+        ArrayList<Category> list = db.getAllCategory();
+        if (categories != null) {
+            categories.clear();
+            if (list != null)
+                categories.addAll(list);
+            if (categories != null)
+                adapter.notifyDataSetChanged();
+        }
     }
 
     @Override
@@ -105,45 +129,56 @@ public class CategoriesActivity extends AppCompatActivity implements AdapterView
 //            e.getMessage();
 //        }
 
-        MenuItem menuItem = menu.getItem(1);
+        MenuItem menuItem = menu.getItem(2);
         SubMenu quizMenu = menuItem.getSubMenu();
         quizMenu.clear();
         //SubMenu quizMenu = menu.addSubMenu("Quiz");
-        for (Category c:categories) {
-            quizMenu.addSubMenu(0,c.id,c.id,c.title);
-        }
-
-
+        if (categories != null)
+            for (Category c : categories) {
+                quizMenu.addSubMenu(0, c.id, c.id, c.title);
+            }
 
 
         return true;
     }
+
     //todo set value thành id cho category
     //todo sửa menu thành list
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Intent intent = new Intent(this, QuizActivity.class);
-//        switch (item.getItemId()) {
-//            case R.id.quiz_fruits:
-//                intent.putExtra("position", 0);
-//                startActivity(intent);
-//                return true;
-//            default:
-//                return super.onOptionsItemSelected(item);
-//         }
-        if (item.getItemId() == R.id.add_category){
+
+        if (item.getItemId() == R.id.add_default) {
+            //createDefaultData();
+            if (db.getCategoryCount() < 1)
+            Toast.makeText(this,"Creating",Toast.LENGTH_LONG).show();
+                new AsyncTask<Void, Void, Void>() {
+                    @Override
+                    protected Void doInBackground(Void... voids) {
+                        createDefaultData();
+                        return null;
+                    }
+
+                    @Override
+                    protected void onPostExecute(Void aVoid) {
+                        //super.onPostExecute(aVoid);
+                        //categories= db.getAllCategory();
+                        toast("Done");
+                        updateCategory();
+                    }
+                }.execute();
+        } else if (item.getItemId() == R.id.add_category) {
             Intent intent1 = new Intent(this, AddCategoryActivity.class);
             startActivity(intent1);
             return true;
-        }
-        for (Category c:categories) {
-            if (item.getItemId() == c.id){
-                intent.putExtra("position", c.id);
-                startActivity(intent);
-                return true;
+        } else
+            for (Category c : categories) {
+                if (item.getItemId() == c.id) {
+                    intent.putExtra("position", c.id);
+                    startActivity(intent);
+                    return true;
+                }
             }
-        }
-
 
 
         //lấy title của menu => id của category => truyền sang activity quiz
@@ -151,6 +186,10 @@ public class CategoriesActivity extends AppCompatActivity implements AdapterView
 //        int id = category.id;
 //        intent.putExtra("position",id);
         return true;
+    }
+
+    private void createDefaultData() {
+        db.createDefaultCategory();
     }
 
     private void populateCategoriesList() {
@@ -295,10 +334,74 @@ public class CategoriesActivity extends AppCompatActivity implements AdapterView
             new AppSettingsDialog.Builder(this).build().show();
         }
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         EasyPermissions.requestPermissions(this, "All permissions are required to run this application", requestCode, permissions);
 
     }
+
+    @Override
+    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+        //return false;
+        Log.v("long clicked", "pos: " + position);
+
+        createDialog(position);
+
+        return true;
+    }
+
+    private void createDialog(final int positionCategory) {
+        String[] items = new String[]{"Edit", "Delete"};
+        AlertDialog singleChoice = new AlertDialog.Builder(this)
+                .setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+
+                        /* User clicked on a radio button do some stuff */
+                        dialog.dismiss();
+                        int selectedPosition = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
+                        switch (selectedPosition) {
+                            case 0:
+                                editCategory(positionCategory);
+                                break;
+                            case 1:
+                                deleteCategory(positionCategory);
+                                break;
+                        }
+                    }
+                }).create();
+        singleChoice.show();
+    }
+
+    private void deleteCategory(int selectedPosition) {
+
+        final Category category = categories.get(selectedPosition);
+
+        //db.deleteCategory(category);
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                db.deleteCategory(category);
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                //super.onPostExecute(aVoid);
+                toast("Deleted");
+            }
+        }.execute();
+
+    }
+
+    private void toast(String text) {
+        Toast.makeText(this, text, Toast.LENGTH_LONG).show();
+        updateCategory();
+    }
+
+    private void editCategory(int positionCategory) {
+        Toast.makeText(this, "Edit", Toast.LENGTH_LONG).show();
+    }
+
 }

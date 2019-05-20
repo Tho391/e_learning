@@ -6,6 +6,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Environment;
+import android.speech.tts.TextToSpeech;
 import android.support.v7.app.AppCompatActivity;
 import android.util.TypedValue;
 import android.view.View;
@@ -16,6 +17,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.Locale;
+import java.util.UUID;
 
 public class ThingsActivity extends AppCompatActivity implements View.OnClickListener {
     private ImageButton rightButton;
@@ -28,11 +31,13 @@ public class ThingsActivity extends AppCompatActivity implements View.OnClickLis
     private MediaPlayer mediaPlayer;
     Thing currentThing;
     Category currentCategory;
+    int position;
+    TextToSpeech tts;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Intent intent = getIntent();//return the intent that started this activity
-        int position = intent.getIntExtra("position", 0);
+        position = intent.getIntExtra("position", 0);
         currentCategory = CategoriesActivity.categories.get(position);
         currentCategory.goToFirstThing();
         setTheme(currentCategory.theme);
@@ -58,6 +63,15 @@ public class ThingsActivity extends AppCompatActivity implements View.OnClickLis
 
         currentThing = currentCategory.currentThing();
         updateResources();
+
+
+        tts= new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                tts.setLanguage(Locale.UK);
+            }
+        });
+
     }
 
     @Override
@@ -98,8 +112,12 @@ public class ThingsActivity extends AppCompatActivity implements View.OnClickLis
                     updateResources();
                 }
                 break;
-            case R.id.buttonAudioThing:
-                playSound(currentThing.getSound());
+            case R.id.buttonAudioThing: {
+                //playSound(currentThing.getSound());
+
+                playSound();
+
+            }
                 break;
             case R.id.thingImage:
                 if (currentThing.hasNoise()) {
@@ -110,10 +128,16 @@ public class ThingsActivity extends AppCompatActivity implements View.OnClickLis
                 //Intent previousIntent = getIntent();
                 //int position = previousIntent.getIntExtra("position", 0);
                 Intent intent = new Intent(this, QuizActivity.class);
-                intent.putExtra("position", currentCategory.id);
+                intent.putExtra("position", position);
                 startActivity(intent);
                 break;
         }
+    }
+
+    private void playSound() {
+        String toSpeak = mainName.getText().toString();
+        String utteranceId = UUID.randomUUID().toString();
+        tts.speak(toSpeak,TextToSpeech.QUEUE_FLUSH,null, utteranceId);
     }
 
     /**
@@ -122,6 +146,9 @@ public class ThingsActivity extends AppCompatActivity implements View.OnClickLis
      * current Category and Thing
      */
     protected void updateResources() {
+        rightButton.setVisibility(currentCategory.hasNextThing() ? View.VISIBLE : View.INVISIBLE);
+        leftButton.setVisibility(currentCategory.hasPrevThing() ? View.VISIBLE : View.INVISIBLE);
+
         try {
             if (currentThing.hasNoise()) {
                 playSound(currentThing.getNoise());
@@ -159,15 +186,16 @@ public class ThingsActivity extends AppCompatActivity implements View.OnClickLis
         // make the picture Invisible and then Visible to add some animation
         mainPicture.setVisibility(View.INVISIBLE);
         //mainPicture.setImageResource(currentThing.getImage());
-        mainPicture.setImageBitmap(currentThing.getImage());
+        if (currentThing.getImage() != null)
+            mainPicture.setImageBitmap(currentThing.getImage());
 
 
         mainPicture.setVisibility(View.VISIBLE);
         quizButton.setImageResource(R.drawable.ic_face_blue);
         mainName.setText(currentThing.getText());
 
-        rightButton.setVisibility(currentCategory.hasNextThing() ? View.VISIBLE : View.INVISIBLE);
-        leftButton.setVisibility(currentCategory.hasPrevThing() ? View.VISIBLE : View.INVISIBLE);
+
+        //playSound();
     }
 
     private void setButtonColor(ImageButton button, int color) {

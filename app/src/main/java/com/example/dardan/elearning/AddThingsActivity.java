@@ -1,9 +1,18 @@
 package com.example.dardan.elearning;
 
+import android.app.Activity;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.Menu;
@@ -13,10 +22,15 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 
 import static com.example.dardan.elearning.AddCategoryActivity.CATEGORY;
+import static com.example.dardan.elearning.AddCategoryActivity.RESULT_LOAD_CAMERA;
+import static com.example.dardan.elearning.AddCategoryActivity.RESULT_LOAD_IMG;
 import static com.example.dardan.elearning.Ulti.getDataFromSharePreferences;
 
 public class AddThingsActivity extends AppCompatActivity implements View.OnClickListener {
@@ -30,14 +44,17 @@ public class AddThingsActivity extends AppCompatActivity implements View.OnClick
     private Thing currentThing;
     private Category category;
     private ArrayList<String> thingCount;
+    MySQLiteHelper db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_things);
 
+        db = new MySQLiteHelper(this);
+
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        setTitle("Category");
+        setTitle("Add Objects");
 
         findView();
         //get category from intent
@@ -48,6 +65,7 @@ public class AddThingsActivity extends AppCompatActivity implements View.OnClick
     private void getCategory() {
 //        Intent intent = getIntent();
 //        category = (Category) intent.getSerializableExtra(CATEGORY);
+        category = new Category(this);
         category = getDataFromSharePreferences(this, CATEGORY);
     }
 
@@ -94,6 +112,8 @@ public class AddThingsActivity extends AppCompatActivity implements View.OnClick
                 break;
             case R.id.thingImage:
                 //todo gọi library để add hình
+                //choose photo from gallery
+                getImageFromLibraryOrCamera();
                 break;
             case R.id.buttonAdd: {
                 //todo new 1 thing mới
@@ -104,7 +124,8 @@ public class AddThingsActivity extends AppCompatActivity implements View.OnClick
                 } else {
                     //save currentThing
                     saveThing();
-                    //reset title & image to default
+                    Toast.makeText(this, thingName.getText() + " added", Toast.LENGTH_LONG).show();
+                    //reset title & image to default_cate
                     resetThingActivity();
                 }
             }
@@ -112,11 +133,49 @@ public class AddThingsActivity extends AppCompatActivity implements View.OnClick
         }
     }
 
+    private void getImageFromLibraryOrCamera() {
+        //todo dung dialog
+
+        String[] items = new String[]{"From Library", "From Camera"};
+        AlertDialog singleChoice = new AlertDialog.Builder(this)
+                .setTitle("Where you want to get picture")
+                .setSingleChoiceItems(items, -1, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+
+                        /* User clicked on a radio button do some stuff */
+                        dialog.dismiss();
+                        int selectedPosition = ((AlertDialog) dialog).getListView().getCheckedItemPosition();
+                        switch (selectedPosition) {
+                            case 0:
+                                getImageFromLibrary();
+                                break;
+                            case 1:
+                                getImageFromCamera();
+                                break;
+                        }
+                    }
+                }).create();
+        singleChoice.show();
+    }
+
+    private void getImageFromCamera() {
+        //camera
+        Intent takePicture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(takePicture, RESULT_LOAD_CAMERA);
+    }
+
+    private void getImageFromLibrary() {
+        //library
+        Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+        photoPickerIntent.setType("image/*");
+        startActivityForResult(photoPickerIntent, RESULT_LOAD_IMG);
+    }
+
     private void saveThing() {
         String thingName = this.thingName.getText().toString();
         Bitmap thingImage = ((BitmapDrawable) this.thingImage.getDrawable()).getBitmap();
         Thing thing = new Thing(thingName, thingImage);
-        currentThing = thing;
+        //currentThing = thing;
         category.things.add(thing);
     }
 
@@ -133,16 +192,61 @@ public class AddThingsActivity extends AppCompatActivity implements View.OnClick
         return true;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.save_category:{
-                //todo add things to category & save category
-            }
+            case R.id.save_category: {
+                if (category.things.size() > 0) {
+                    //todo save category
 
-                return true;
+                    db.addCategory(category);
+                    //set result code
+                    Intent returnIntent = new Intent();
+                    setResult(Activity.RESULT_OK, returnIntent);
+                    finish();
+
+                    //deleteSharedPreferences(CATEGORY);
+                    Toast.makeText(this, category.title + " category added", Toast.LENGTH_LONG).show();
+                } else
+                    Toast.makeText(this, "You have not add any objects!", Toast.LENGTH_LONG).show();
+            }
+            break;
+            default:
+                return super.onOptionsItemSelected(item);
         }
         return true;
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        //super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case RESULT_LOAD_IMG: {
+                if (resultCode == Activity.RESULT_OK) {
+                    try {
+                        Uri imageUri = data.getData();
+                        InputStream imageStream = getContentResolver().openInputStream(imageUri);
+                        Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
+
+                        thingImage.setImageBitmap(selectedImage);
+
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                        Toast.makeText(this, "Something went wrong", Toast.LENGTH_LONG).show();
+                    } catch (NullPointerException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            break;
+            case RESULT_LOAD_CAMERA: {
+                if (resultCode == Activity.RESULT_OK) {
+                    Bitmap photo = (Bitmap) data.getExtras().get("data");
+                    thingImage.setImageBitmap(photo);
+                }
+            }
+            break;
+        }
+    }
 }

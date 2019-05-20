@@ -40,7 +40,11 @@ public class Thing implements Serializable {
     }
 
     public Thing(String thingName, Bitmap thingImage) {
-        new Thing(thingImage, "", thingName, "");
+        //new Thing(thingImage, "", thingName, "");
+        this.image = thingImage;
+        this.text = thingName;
+        this.noise ="0";
+        this.sound ="0";
     }
 
     public String getText() {
