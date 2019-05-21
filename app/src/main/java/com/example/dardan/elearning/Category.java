@@ -9,10 +9,11 @@ import java.util.ArrayList;
 
 import static com.example.dardan.elearning.MySQLiteHelper.COLORS;
 import static com.example.dardan.elearning.MySQLiteHelper.THEMES;
+import static com.example.dardan.elearning.Ulti.GetRandom;
 
 public class Category implements Serializable {
     ArrayList<Thing> things;
-    int currentIndex = 0;
+    public int currentIndex;
     int id;
     String title;
     Bitmap image;
@@ -25,9 +26,10 @@ public class Category implements Serializable {
         Bitmap b = BitmapFactory.decodeResource(context.getResources(), R.drawable.add_image);
         image = b;
         highScore = 0;
-        color = COLORS[1];
-        theme = THEMES[1];
+        color = GetRandom(COLORS);
+        theme = GetRandom(THEMES);
         things = new ArrayList<>();
+        this.currentIndex = 0;
     }
 
     public Category(String title, Bitmap image, int highScore, int color, int theme) {
@@ -37,6 +39,7 @@ public class Category implements Serializable {
         this.color = color;
         this.theme = theme;
         this.things = new ArrayList<>();
+        this.currentIndex = 0;
     }
 
     public void addThing(Thing thing) {
@@ -48,14 +51,20 @@ public class Category implements Serializable {
     }
 
     public Thing nextThing() {
-        if (hasNextThing())
-            return things.get(++currentIndex);
+        if (hasNextThing()) {
+
+            currentIndex++;
+            return things.get(currentIndex);
+        }
         return null;
     }
 
     public Thing prevThing() {
-        if (hasPrevThing())
-            return things.get(--currentIndex);
+        if (hasPrevThing()) {
+
+            currentIndex--;
+            return things.get(currentIndex);
+        }
         return null;
     }
 
@@ -72,7 +81,7 @@ public class Category implements Serializable {
     }
 
     public void goToFirstThing() {
-        currentIndex = 0;
+        this.currentIndex = 0;
     }
 
     public void updateHighscore() {

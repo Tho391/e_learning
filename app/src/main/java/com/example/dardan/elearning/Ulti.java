@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
+import java.util.Random;
 
 public class Ulti {
     private static final String SHARE_PREFERENCES = "sharePreferences";
@@ -90,5 +91,9 @@ public class Ulti {
         String json = mPrefs.getString(objectName, "");
         Category obj = gson.fromJson(json, Category.class);
         return obj;
+    }
+    public static int GetRandom(int[] array){
+        int rnd = new Random().nextInt(array.length);
+        return array[rnd];
     }
 }

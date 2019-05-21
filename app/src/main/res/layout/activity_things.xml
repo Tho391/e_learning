@@ -17,7 +17,7 @@
         android:layout_marginBottom="5dp"
         android:padding="5dp"
         android:background="@color/primary_light"
-        android:scaleType="centerCrop"
+        android:scaleType="centerInside"
         android:src="@drawable/orange" />
 
     <TextView
@@ -53,7 +53,7 @@
     <ImageButton
         android:id="@+id/buttonRightThing"
         android:layout_width="65dp"
-        android:layout_height="60dp"
+        android:layout_height="65dp"
         android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
         android:layout_marginLeft="10dp"
@@ -68,7 +68,7 @@
     <ImageButton
         android:id="@+id/buttonLeftThing"
         android:layout_width="65dp"
-        android:layout_height="60dp"
+        android:layout_height="65dp"
         android:layout_alignParentLeft="true"
         android:layout_alignParentBottom="true"
         android:layout_marginLeft="2dp"

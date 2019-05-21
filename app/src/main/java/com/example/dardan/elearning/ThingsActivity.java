@@ -29,9 +29,9 @@ public class ThingsActivity extends AppCompatActivity implements View.OnClickLis
     private ImageButton audioButton;
     private RelativeLayout relativeLayout;
     private MediaPlayer mediaPlayer;
-    Thing currentThing;
-    Category currentCategory;
-    int position;
+    private Thing currentThing;
+    private Category currentCategory;
+    private int position;
     TextToSpeech tts;
 
     @Override
@@ -39,7 +39,9 @@ public class ThingsActivity extends AppCompatActivity implements View.OnClickLis
         Intent intent = getIntent();//return the intent that started this activity
         position = intent.getIntExtra("position", 0);
         currentCategory = CategoriesActivity.categories.get(position);
-        currentCategory.goToFirstThing();
+        currentCategory.currentIndex = 0;
+        //currentCategory.goToFirstThing();
+        currentThing = currentCategory.currentThing();
         setTheme(currentCategory.theme);
 
         super.onCreate(savedInstanceState);
@@ -61,11 +63,11 @@ public class ThingsActivity extends AppCompatActivity implements View.OnClickLis
         mainPicture.setOnClickListener(this);
         quizButton.setOnClickListener(this);
 
-        currentThing = currentCategory.currentThing();
+
         updateResources();
 
 
-        tts= new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
                 tts.setLanguage(Locale.UK);
@@ -118,7 +120,7 @@ public class ThingsActivity extends AppCompatActivity implements View.OnClickLis
                 playSound();
 
             }
-                break;
+            break;
             case R.id.thingImage:
                 if (currentThing.hasNoise()) {
                     playSound(currentThing.getNoise());
@@ -137,7 +139,7 @@ public class ThingsActivity extends AppCompatActivity implements View.OnClickLis
     private void playSound() {
         String toSpeak = mainName.getText().toString();
         String utteranceId = UUID.randomUUID().toString();
-        tts.speak(toSpeak,TextToSpeech.QUEUE_FLUSH,null, utteranceId);
+        tts.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null, utteranceId);
     }
 
     /**

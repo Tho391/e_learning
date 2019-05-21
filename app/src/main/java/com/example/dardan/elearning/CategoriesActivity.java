@@ -151,22 +151,22 @@ public class CategoriesActivity extends AppCompatActivity implements AdapterView
         if (item.getItemId() == R.id.add_default) {
             //createDefaultData();
             if (db.getCategoryCount() < 1)
-            Toast.makeText(this,"Creating",Toast.LENGTH_LONG).show();
-                new AsyncTask<Void, Void, Void>() {
-                    @Override
-                    protected Void doInBackground(Void... voids) {
-                        createDefaultData();
-                        return null;
-                    }
+                Toast.makeText(this, "Creating...", Toast.LENGTH_LONG).show();
+            new AsyncTask<Void, Void, Void>() {
+                @Override
+                protected Void doInBackground(Void... voids) {
+                    createDefaultData();
+                    return null;
+                }
 
-                    @Override
-                    protected void onPostExecute(Void aVoid) {
-                        //super.onPostExecute(aVoid);
-                        //categories= db.getAllCategory();
-                        toast("Done");
-                        updateCategory();
-                    }
-                }.execute();
+                @Override
+                protected void onPostExecute(Void aVoid) {
+                    //super.onPostExecute(aVoid);
+                    //categories= db.getAllCategory();
+                    toast("Done");
+                    updateCategory();
+                }
+            }.execute();
         } else if (item.getItemId() == R.id.add_category) {
             Intent intent1 = new Intent(this, AddCategoryActivity.class);
             startActivity(intent1);
@@ -174,7 +174,7 @@ public class CategoriesActivity extends AppCompatActivity implements AdapterView
         } else
             for (Category c : categories) {
                 if (item.getItemId() == c.id) {
-                    intent.putExtra("position", c.id);
+                    intent.putExtra("position", categories.indexOf(c));
                     startActivity(intent);
                     return true;
                 }
@@ -374,8 +374,32 @@ public class CategoriesActivity extends AppCompatActivity implements AdapterView
         singleChoice.show();
     }
 
-    private void deleteCategory(int selectedPosition) {
+    private void deleteCategory(final int selectedPosition) {
+        AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+        alertDialog.setTitle("Alert");
+        alertDialog.setMessage("Are you sure to cancel creating a new category?");
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        //finish();
+                        deleteCate(selectedPosition);
+                    }
+                });
+        alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "Cancel",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+        alertDialog.show();
 
+
+    }
+
+    private void deleteCate(int selectedPosition) {
         final Category category = categories.get(selectedPosition);
 
         //db.deleteCategory(category);
@@ -392,7 +416,6 @@ public class CategoriesActivity extends AppCompatActivity implements AdapterView
                 toast("Deleted");
             }
         }.execute();
-
     }
 
     private void toast(String text) {
